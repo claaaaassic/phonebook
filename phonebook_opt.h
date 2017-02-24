@@ -16,7 +16,6 @@ typedef struct __PHONE_BOOK_DETAIL {
     char zip[5];
 } detail;
 
-
 typedef struct __PHONE_BOOK_ENTRY {
     char lastName[MAX_LAST_NAME_SIZE];
     detail *detail;

@@ -5,11 +5,11 @@
 
 #include "phonebook_opt.h"
 
-/* original version */
+/* struct version */
 entry *findName(char lastName[], entry *pHead)
 {
-    while (pHead != NULL) {
-        if (strcasecmp(lastName, pHead->lastName) == 0)
+    while (pHead) {
+        if (!strcasecmp(lastName, pHead->lastName))
             return pHead;
         pHead = pHead->pNext;
     }
