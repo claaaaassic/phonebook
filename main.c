@@ -12,6 +12,11 @@
 #define OUT_FILE "orig.txt"
 #endif
 
+#ifdef HASH
+#undef OUT_FILE
+#define OUT_FILE "hash.txt"
+#endif
+
 #define DICT_FILE "./dictionary/words.txt"
 
 static double diff_in_second(struct timespec t1, struct timespec t2)
@@ -42,6 +47,11 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+#ifdef HASH
+    /* init hash table */
+    hashTable *ht = initHashTable();
+#endif
+
     /* build the entry */
     entry *pHead, *e;
     pHead = (entry *) malloc(sizeof(entry));
@@ -58,7 +68,11 @@ int main(int argc, char *argv[])
             i++;
         line[i - 1] = '\0';
         i = 0;
+#ifdef HASH
+        append(line, ht);
+#else
         e = append(line, e);
+#endif
     }
     clock_gettime(CLOCK_REALTIME, &end);
     cpu_time1 = diff_in_second(start, end);
@@ -66,22 +80,30 @@ int main(int argc, char *argv[])
     /* close file as soon as possible */
     fclose(fp);
 
-    e = pHead;
-
-    /* the givn last name to find */
+    /* the given last name to find */
     char input[MAX_LAST_NAME_SIZE] = "zyxel";
-    e = pHead;
 
+    e = pHead;
+#ifdef HASH
+    assert(findName(input, ht) &&
+           "Did you implement findName() in " IMPL "?");
+    assert(0 == strcmp(findName(input, ht)->lastName, "zyxel"));
+#else
     assert(findName(input, e) &&
            "Did you implement findName() in " IMPL "?");
     assert(0 == strcmp(findName(input, e)->lastName, "zyxel"));
+#endif
 
 #if defined(__GNUC__)
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
 #endif
     /* compute the execution time */
     clock_gettime(CLOCK_REALTIME, &start);
+#ifdef HASH
+    findName(input, ht);
+#else
     findName(input, e);
+#endif
     clock_gettime(CLOCK_REALTIME, &end);
     cpu_time2 = diff_in_second(start, end);
 

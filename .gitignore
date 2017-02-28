@@ -7,8 +7,10 @@
 *.bak
 phonebook_opt
 phonebook_orig
+phonebook_hash
 calculate
 orig.txt
 opt.txt
+hash.txt
 output.txt
 runtime.png
