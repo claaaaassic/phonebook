@@ -29,6 +29,7 @@ typedef struct __PHONE_BOOK_HASHTABLE {
 
 unsigned int bkdrHash(char *str);
 hashTable *initHashTable();
+void freeHashTable();
 entry *findName(char lastName[], hashTable *ht);
 void append(char lastName[], hashTable *ht);
 

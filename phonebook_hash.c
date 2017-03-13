@@ -27,6 +27,25 @@ hashTable *initHashTable()
     return newHashTable;
 }
 
+void freeHashTable(hashTable *ht)
+{
+    for(int i=0; i<HASHTABLE_SIZE; i++) {
+        entry *e = ht->list[i];
+        if(!e) {
+            free(e);
+            continue;
+        }
+        while (e->pNext) {
+            entry *next = e->pNext;
+            e->pNext = next->pNext;
+            free(next);
+        }
+        free(e);
+    }
+    free(ht->list);
+    free(ht);
+}
+
 entry *findName(char lastName[], hashTable *ht)
 {
     entry *e;
