@@ -3,19 +3,18 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
+//#include "phonebook_hash.h"
 
 #include IMPL
 
 #ifdef OPT
 #define OUT_FILE "opt.txt"
+#elif defined(HASH)
+#define OUT_FILE "hash.txt"
 #else
 #define OUT_FILE "orig.txt"
 #endif
 
-#ifdef HASH
-#undef OUT_FILE
-#define OUT_FILE "hash.txt"
-#endif
 
 #define DICT_FILE "./dictionary/words.txt"
 
@@ -32,13 +31,31 @@ static double diff_in_second(struct timespec t1, struct timespec t2)
     return (diff.tv_sec + diff.tv_nsec / 1000000000.0);
 }
 
+
+#ifdef HASH
+
+hashAlgo * hash_function_providers[] = {
+    &SDBMHashProvider,
+    &RSHashProvider,
+    &JSHashProvider,
+    &PJWHashProvider,
+    &ELFHashProvider,
+    &BKDRHashProvider,
+    &DJBHashProvider,
+    &APHashProvider
+};
+
+#endif
+
 int main(int argc, char *argv[])
 {
+
     FILE *fp;
     int i = 0;
     char line[MAX_LAST_NAME_SIZE];
     struct timespec start, end;
     double cpu_time1, cpu_time2;
+
 
     /* check file opening */
     fp = fopen(DICT_FILE, "r");
@@ -49,7 +66,8 @@ int main(int argc, char *argv[])
 
 #ifdef HASH
     /* init hash table */
-    hashTable *ht = initHashTable();
+    hashAlgo *algo = hash_function_providers[0];
+    hashTable *ht = algo->init();
 #endif
 
     /* build the entry */
@@ -69,7 +87,7 @@ int main(int argc, char *argv[])
         line[i - 1] = '\0';
         i = 0;
 #ifdef HASH
-        append(line, ht);
+        append(line, ht, algo);
 #else
         e = append(line, e);
 #endif
@@ -85,9 +103,9 @@ int main(int argc, char *argv[])
 
     e = pHead;
 #ifdef HASH
-    assert(findName(input, ht) &&
+    assert(findName(input, ht, algo) &&
            "Did you implement findName() in " IMPL "?");
-    assert(0 == strcmp(findName(input, ht)->lastName, "zyxel"));
+    assert(0 == strcmp(findName(input, ht, algo)->lastName, "zyxel"));
 #else
     assert(findName(input, e) &&
            "Did you implement findName() in " IMPL "?");
@@ -100,7 +118,7 @@ int main(int argc, char *argv[])
     /* compute the execution time */
     clock_gettime(CLOCK_REALTIME, &start);
 #ifdef HASH
-    findName(input, ht);
+    findName(input, ht, algo);
 #else
     findName(input, e);
 #endif
@@ -115,7 +133,7 @@ int main(int argc, char *argv[])
     printf("execution time of findName() : %lf sec\n", cpu_time2);
 
 #ifdef HASH
-    freeHashTable(ht);
+    algo->free(ht);
 #endif
 
     while(pHead->pNext) {
