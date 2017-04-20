@@ -1,7 +1,7 @@
 CC ?= gcc
 CFLAGS_common ?= -Wall -std=gnu99
-CFLAGS_orig = -O0
-CFLAGS_opt  = -O0
+CFLAGS_orig = -O0 -pg
+CFLAGS_opt  = -O0 
 
 EXEC = phonebook_orig phonebook_opt phonebook_hash
 
@@ -14,6 +14,7 @@ $(GIT_HOOKS):
 	@echo
 
 SRCS_common = main.c
+SRCS_mmp = main_mp.c file_align.h file_align.c memory_pool.h memory_pool.c
 
 phonebook_orig: $(SRCS_common) phonebook_orig.c phonebook_orig.h
 	$(CC) $(CFLAGS_common) $(CFLAGS_orig) \
@@ -29,6 +30,11 @@ phonebook_hash: $(SRCS_common) phonebook_hash.c phonebook_hash.h
 	$(CC) $(CFLAGS_common) $(CFLAGS_opt) \
 		-DIMPL="\"$@.h\"" -o $@ \
 		$(SRCS_common) $@.c
+
+phonebook_mp:$(SRCS_mmap) phonebook_orig.c phonebook_orig.h
+	$(CC) $(CFLAGS_common) $(CFLAGS_orig) \
+		-DIMPL="\"phonebook_orig.h\"" -o $@ \
+		main_mp.c phonebook_orig.c file_align.c memory_pool.c
 
 run: $(EXEC)
 	echo 3 | sudo tee /proc/sys/vm/drop_caches
@@ -51,10 +57,22 @@ output.txt: cache-test calculate
 plot: output.txt
 	gnuplot scripts/runtime.gp
 
+
+compare: phonebook_orig phonebook_mp
+	perf stat --repeat 100 \
+		-e cache-misses,cache-references,instructions,cycles \
+		./phonebook_orig
+	perf stat --repeat 100 \
+		-e cache-misses,cache-references,instructions,cycles \
+		./phonebook_mp
+	./calculate
+	gnuplot scripts/runtime_mp.gp
+
 calculate: calculate.c
 	$(CC) $(CFLAGS_common) $^ -o $@
 
 .PHONY: clean
 clean:
 	$(RM) $(EXEC) *.o perf.* \
-	      	calculate orig.txt opt.txt hash.txt output.txt runtime.png
+	      	calculate orig.txt opt.txt hash.txt output.txt runtime.png \
+			mmap.txt phonebook_mp

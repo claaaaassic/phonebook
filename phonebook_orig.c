@@ -26,3 +26,13 @@ entry *append(char lastName[], entry *e)
 
     return e;
 }
+
+entry *append_mp(char lastName[], entry *e, entry *next)
+{
+    e->pNext = next;
+    e = e->pNext;
+    strcpy(e->lastName, lastName);
+    e->pNext = NULL;
+
+    return e;
+}
