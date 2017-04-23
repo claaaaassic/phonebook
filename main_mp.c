@@ -34,10 +34,10 @@ int main(int argc, char *argv[])
 {
     int fd, data_count;
     off_t size;
-    char *map;
+    char *map, *input, ans;
     struct timespec start, end;
     double cpu_time1, cpu_time2;
-
+    input = argv[1];
     /* build the entry */
     entry *pHead, *e;
     pHead = (entry *) malloc(sizeof(entry));
@@ -79,24 +79,31 @@ int main(int argc, char *argv[])
     clock_gettime(CLOCK_REALTIME, &end);
     cpu_time1 = diff_in_second(start, end);
 
-    /* the given last name to find */
-    char input[MAX_LAST_NAME_SIZE] = "zyxel";
-
     e = pHead;
 
-    assert(findName(input, e) &&
-           "Did you implement findName() in " IMPL "?");
-    assert(0 == strcmp(findName(input, e)->lastName, "zyxel"));
-
+    if (findName(input, e) == NULL) {
+        printf("Can't find the name you want.Do you want to fuzzy search similar name?\n");
+        printf("Y/N: ");
+        scanf("%s", &ans);
+        if (ans == 'Y') {
+            clock_gettime(CLOCK_REALTIME, &start);
+            fuzzy_search(input, e);
+            clock_gettime(CLOCK_REALTIME, &end);
+        } else {
+            mp_destory(mp);
+            return 0;
+        }
+    } else {
 #if defined(__GNUC__)
-    __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
+        __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
 #endif
-    /* compute the execution time */
-    clock_gettime(CLOCK_REALTIME, &start);
+        /* compute the execution time */
+        clock_gettime(CLOCK_REALTIME, &start);
 
-    findName(input, e);
+        findName(input, e);
 
-    clock_gettime(CLOCK_REALTIME, &end);
+        clock_gettime(CLOCK_REALTIME, &end);
+    }
     cpu_time2 = diff_in_second(start, end);
 
     FILE *output = fopen(OUT_FILE, "a");
