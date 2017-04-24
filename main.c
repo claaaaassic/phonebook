@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
+#include <math.h>
 
 #include IMPL
 
@@ -18,6 +19,8 @@
 #endif
 
 #define DICT_FILE "./dictionary/words.txt"
+
+#define SIMPLE_TIMES 20
 
 static double diff_in_second(struct timespec t1, struct timespec t2)
 {
@@ -62,20 +65,45 @@ int main(int argc, char *argv[])
 #if defined(__GNUC__)
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
 #endif
-    clock_gettime(CLOCK_REALTIME, &start);
-    while (fgets(line, sizeof(line), fp)) {
-        while (line[i] != '\0')
-            i++;
-        line[i - 1] = '\0';
-        i = 0;
+    int num = 0;
+    double data[SIMPLE_TIMES];
+    double sum = 0.0, average = 0.0, sd = 0.0, low_end = 0.0, up_end = 0.0;
+
+    for (int times = 0; times < SIMPLE_TIMES; times++) {
+        clock_gettime(CLOCK_REALTIME, &start);
+        while (fgets(line, sizeof(line), fp)) {
+            while (line[i] != '\0')
+                i++;
+            line[i - 1] = '\0';
+            i = 0;
 #ifdef HASH
-        append(line, ht);
+            append(line, ht);
 #else
-        e = append(line, e);
+            e = append(line, e);
 #endif
+        }
+        clock_gettime(CLOCK_REALTIME, &end);
+
+        fseek(fp, 0, SEEK_SET);
+        /* calculate confidence interval */
+        data[times] = diff_in_second(start, end);
+        average += data[times];
     }
-    clock_gettime(CLOCK_REALTIME, &end);
-    cpu_time1 = diff_in_second(start, end);
+    average = average/SIMPLE_TIMES;
+
+    for (int i = 0; i< SIMPLE_TIMES; i++)
+        sd += (data[i] - average) * (data[i] - average);
+    sd = sqrt(sd/SIMPLE_TIMES);
+
+    low_end = average - 1.96*sd;
+    up_end = average + 1.96*sd;
+    for (int i = 0; i < SIMPLE_TIMES; i++) {
+        if (data[i] >= low_end && data[i] <= up_end) {
+            sum += data[i];
+            num++;
+        }
+    }
+    cpu_time1 = (double) sum/num;
 
     /* close file as soon as possible */
     fclose(fp);
@@ -98,14 +126,38 @@ int main(int argc, char *argv[])
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
 #endif
     /* compute the execution time */
-    clock_gettime(CLOCK_REALTIME, &start);
+    average = 0.0;
+    sd = 0.0;
+    sum = 0.0;
+    num = 0;
+    for (int times = 0; times < SIMPLE_TIMES; times++) {
+        clock_gettime(CLOCK_REALTIME, &start);
 #ifdef HASH
-    findName(input, ht);
+        findName(input, ht);
 #else
-    findName(input, e);
+        findName(input, e);
 #endif
-    clock_gettime(CLOCK_REALTIME, &end);
-    cpu_time2 = diff_in_second(start, end);
+        clock_gettime(CLOCK_REALTIME, &end);
+        /* calculate confidence interval */
+        data[times] = diff_in_second(start, end);
+        average += data[times];
+    }
+    average = average/SIMPLE_TIMES;
+
+    for (int i = 0; i < SIMPLE_TIMES; i++)
+        sd += (data[i] - average) * (data[i] - average);
+    sd = sqrt(sd/SIMPLE_TIMES);
+
+    low_end = average - 1.96*sd;
+    up_end = average + 1.96*sd;
+
+    for (int i = 0; i < SIMPLE_TIMES; i++) {
+        if (data[i] >= low_end && data[i] <= up_end) {
+            sum += data[i];
+            num++;
+        }
+    }
+    cpu_time2 = (double) sum/num;
 
     FILE *output = fopen(OUT_FILE, "a");
     fprintf(output, "append() findName() %lf %lf\n", cpu_time1, cpu_time2);
