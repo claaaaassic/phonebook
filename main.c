@@ -11,6 +11,7 @@
 #define OUT_FILE "opt.txt"
 #elif defined(HASH)
 #define OUT_FILE "hash.txt"
+#define OUT_FILE_NAME(ALGONAME,INDX) ALGONAME[INDX]
 #else
 #define OUT_FILE "orig.txt"
 #endif
@@ -45,6 +46,21 @@ hashAlgo * hash_function_providers[] = {
     &APHashProvider
 };
 
+
+char * algo_out_path[] = {
+    "SDBM.txt",
+    "RS.txt",
+    "JS.txt",
+    "PJW.txt",
+    "ELF.txt",
+    "BKDR.txt",
+    "DJB.txt",
+    "AP.txt"
+};
+
+
+
+
 #endif
 
 int main(int argc, char *argv[])
@@ -52,6 +68,7 @@ int main(int argc, char *argv[])
 
     FILE *fp;
     int i = 0;
+    int index=5;
     char line[MAX_LAST_NAME_SIZE];
     struct timespec start, end;
     double cpu_time1, cpu_time2;
@@ -64,9 +81,42 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-#ifdef HASH
+
+
+#ifdef HASHALGO
+
+    for (index = 0; index < 8; index++) {
+
+        fp = fopen(DICT_FILE, "r");
+        if (fp == NULL) {
+            printf("cannot open the file\n");
+            return -1;
+        }
+        unsigned int hash_table_count [HASHTABLE_SIZE] = {};
+        char line[MAX_LAST_NAME_SIZE]= {};
+        hashAlgo *algo = hash_function_providers[index];
+        while (fgets(line, sizeof(line), fp)) {
+            while (line[i] != '\0')
+                i++;
+            line[i - 1] = '\0';
+            i = 0;
+            hash_table_count[algo->hashfuction(line) % HASHTABLE_SIZE]++;
+        }
+        FILE *output1 = fopen( OUT_FILE_NAME(algo_out_path,index), "a");
+        for(i=0 ; i<HASHTABLE_SIZE ; i++) {
+            fprintf(output1, "%d %d\n", i, hash_table_count[i]);
+        }
+        fclose(output1);
+        i=0;
+        fclose(fp);
+    }
+    return ;
+#endif
+
+
+#ifdef  HASH
     /* init hash table */
-    hashAlgo *algo = hash_function_providers[0];
+    hashAlgo *algo = hash_function_providers[5];
     hashTable *ht = algo->init();
 #endif
 
@@ -81,6 +131,8 @@ int main(int argc, char *argv[])
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
 #endif
     clock_gettime(CLOCK_REALTIME, &start);
+
+
     while (fgets(line, sizeof(line), fp)) {
         while (line[i] != '\0')
             i++;
@@ -88,6 +140,7 @@ int main(int argc, char *argv[])
         i = 0;
 #ifdef HASH
         append(line, ht, algo);
+
 #else
         e = append(line, e);
 #endif
@@ -119,6 +172,7 @@ int main(int argc, char *argv[])
     clock_gettime(CLOCK_REALTIME, &start);
 #ifdef HASH
     findName(input, ht, algo);
+
 #else
     findName(input, e);
 #endif
@@ -142,6 +196,8 @@ int main(int argc, char *argv[])
         free(next);
     }
     free(pHead);
+
+
 
     return 0;
 }

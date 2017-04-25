@@ -2,9 +2,10 @@
 #define _PHONEBOOK_H
 
 #define MAX_LAST_NAME_SIZE 16
-#define HASHTABLE_SIZE 3000
+#define HASHTABLE_SIZE 300000
 
 #define HASH 1
+//#define HASHALGO 0
 typedef struct __PHONE_BOOK_DETAIL {
     char firstName[16];
     char email[16];
