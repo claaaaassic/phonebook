@@ -3,7 +3,6 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
-
 #include IMPL
 
 #ifdef OPT
@@ -13,8 +12,12 @@
 #endif
 
 #ifdef HASH
-#undef OUT_FILE
 #define OUT_FILE "hash.txt"
+#endif
+
+
+#ifdef BST
+#define OUT_FILE "bst.txt"
 #endif
 
 #define DICT_FILE "./dictionary/words.txt"
@@ -74,6 +77,9 @@ int main(int argc, char *argv[])
         e = append(line, e);
 #endif
     }
+#if defined(BST)
+    node *root = sortedListToBST(pHead);
+#endif
     clock_gettime(CLOCK_REALTIME, &end);
     cpu_time1 = diff_in_second(start, end);
 
@@ -88,6 +94,10 @@ int main(int argc, char *argv[])
     assert(findName(input, ht) &&
            "Did you implement findName() in " IMPL "?");
     assert(0 == strcmp(findName(input, ht)->lastName, "zyxel"));
+#elif defined(BST)
+    assert(findName(input, root) &&
+           "Did you implement findName() in " IMPL "?");
+    assert(0 == strcmp(findName(input, root)->pEntry->lastName, "zyxel"));
 #else
     assert(findName(input, e) &&
            "Did you implement findName() in " IMPL "?");
@@ -101,6 +111,8 @@ int main(int argc, char *argv[])
     clock_gettime(CLOCK_REALTIME, &start);
 #ifdef HASH
     findName(input, ht);
+#elif defined(BST)
+    findName(input, root);
 #else
     findName(input, e);
 #endif
