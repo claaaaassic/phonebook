@@ -13,7 +13,7 @@ unsigned int bkdrHash(char *str)
     while (*str) {
         hash = hash * seed + (*str++);
     }
-    return (hash % HASHTABLE_SIZE);
+    return (hash & 0x7FFFFFFF );
 }
 
 hashTable *initHashTable()
@@ -49,7 +49,7 @@ void freeHashTable(hashTable *ht)
 entry *findName(char lastName[], hashTable *ht)
 {
     entry *e;
-    unsigned int index = bkdrHash(lastName);
+    unsigned int index = bkdrHash(lastName)%HASHTABLE_SIZE;
     for(e = ht->list[index]; e; e = e->pNext) {
         if(!strcasecmp(lastName, e->lastName))
             return e;
@@ -60,7 +60,7 @@ entry *findName(char lastName[], hashTable *ht)
 void append(char lastName[], hashTable *hashTable)
 {
     /* allocate memory for the new entry and put lastName */
-    unsigned int index = bkdrHash(lastName);
+    unsigned int index = bkdrHash(lastName)%HASHTABLE_SIZE;
     entry *newEntry;
     newEntry = (entry *) malloc(sizeof(entry));
     strcpy(newEntry->lastName, lastName);
