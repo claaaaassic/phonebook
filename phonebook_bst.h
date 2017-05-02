@@ -2,8 +2,10 @@
 #define _PHONEBOOK_H
 
 #define MAX_LAST_NAME_SIZE 16
-
+#define GROUP_ENTRY_NUM 1
 #define BST 1
+
+
 
 typedef struct __PHONE_BOOK_DETAIL {
     char firstName[16];
@@ -26,11 +28,12 @@ typedef struct __PHONE_BOOK_ENTRY {
 typedef struct __PHONE_BOOK_BST_NODE {
     struct __PHONE_BOOK_BST_NODE *left;
     struct __PHONE_BOOK_BST_NODE *right;
-    entry *pEntry;
+    entry *pEntry[GROUP_ENTRY_NUM];
 } node;
 
-node *findName(char lastName[], node *root);
+entry *findName(char lastName[], node *root);
 entry *append(char lastName[], entry *e);
 node *sortedListToBST(entry *e);
+node *findGroupEntryNode(char lastName[], node *root);
 node *sortedListToBSTRecur(entry **e, int listLength);
 #endif

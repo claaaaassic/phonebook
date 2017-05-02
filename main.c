@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 #elif defined(BST)
     assert(findName(input, root) &&
            "Did you implement findName() in " IMPL "?");
-    assert(0 == strcmp(findName(input, root)->pEntry->lastName, "zyxel"));
+    assert(0 == strcmp(findName(input, root)->lastName, "zyxel"));
 #else
     assert(findName(input, e) &&
            "Did you implement findName() in " IMPL "?");
